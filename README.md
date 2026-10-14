@@ -1,4 +1,4 @@
-# TaskbarMiddleClick — compilação automática no GitHub
+# TaskbarMiddleClick #
 
 Este pequeno projeto projeto mostra a área de trabalho quando você clica com o botão do meio em uma área vazia da barra de tarefas do Windows.
 
