@@ -1,0 +1,40 @@
+
+name: Build Windows EXE
+
+on:
+  workflow_dispatch:
+  push:
+    branches:
+      - main
+      - master
+
+permissions:
+  contents: read
+
+jobs:
+  build:
+    runs-on: windows-latest
+
+    steps:
+      - name: Baixar o código
+        uses: actions/checkout@v4
+
+      - name: Configurar compilador C++
+        uses: ilammy/msvc-dev-cmd@v1
+        with:
+          arch: x64
+
+      - name: Compilar executável
+        shell: pwsh
+        run: |
+          cl.exe /nologo /O2 /EHsc /DUNICODE /D_UNICODE TaskbarMiddleClick.cpp /link /SUBSYSTEM:WINDOWS user32.lib /OUT:TaskbarMiddleClick.exe
+          if ($LASTEXITCODE -ne 0) {
+            throw "A compilação falhou."
+          }
+
+      - name: Disponibilizar executável
+        uses: actions/upload-artifact@v4
+        with:
+          name: TaskbarMiddleClick-Windows-x64
+          path: TaskbarMiddleClick.exe
+          retention-days: 30
