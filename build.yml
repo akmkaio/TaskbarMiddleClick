@@ -1,0 +1,41 @@
+name: Build Windows EXE
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [ "main" ]
+
+permissions:
+  contents: read
+
+jobs:
+  build:
+    runs-on: windows-latest
+    steps:
+      - name: Baixar o código
+        uses: actions/checkout@v4
+
+      - name: Compilar executável x64
+        shell: pwsh
+        run: |
+          $source = "TaskbarMiddleClick.cpp"
+          $output = "TaskbarMiddleClick.exe"
+          $compiler = Get-Command cl.exe -ErrorAction SilentlyContinue
+          if (-not $compiler) {
+            $vswhere = "${env:ProgramFiles(x86)}\Microsoft Visual Studio\Installer\vswhere.exe"
+            $vsPath = & $vswhere -latest -products * -requires Microsoft.VisualStudio.Component.VC.Tools.x86.x64 -property installationPath
+            if (-not $vsPath) { throw "Visual Studio C++ Build Tools não encontrados no runner." }
+            $devShell = Join-Path $vsPath "Common7\Tools\Launch-VsDevShell.ps1"
+            . $devShell -Arch amd64 -HostArch amd64
+          }
+          cl.exe /nologo /O2 /EHsc /DUNICODE /D_UNICODE $source /link /SUBSYSTEM:WINDOWS user32.lib /OUT:$output
+          if ($LASTEXITCODE -ne 0) { throw "A compilação falhou." }
+          if (-not (Test-Path $output)) { throw "O executável não foi criado." }
+
+      - name: Disponibilizar o EXE para download
+        uses: actions/upload-artifact@v4
+        with:
+          name: TaskbarMiddleClick-Windows-x64
+          path: TaskbarMiddleClick.exe
+          if-no-files-found: error
+          retention-days: 30
